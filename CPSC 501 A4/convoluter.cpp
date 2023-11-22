@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cstdint>
 
 struct wavHeader {
     char chunkID[4];
@@ -15,7 +16,7 @@ struct wavHeader {
     uint16_t bitsPerSample;
     char subchunk2ID[4];
     uint32_t subchunk2Size;
-    //int16_t* data;
+    int16_t* data;
 };
 
 wavHeader readHeader(FILE* filename);
@@ -90,10 +91,14 @@ wavHeader readHeader(FILE* filename)
     if (fileHeader.subchunk1Size > 16) {
         for (int i = 0; i < (fileHeader.subchunk1Size - 16); i++)
             fread(&junk, sizeof(char), 1, filename);
+        fileHeader.subchunk1Size = 16;
     }
 
     fread(fileHeader.subchunk2ID, sizeof(char), 4, filename);
     fread(&fileHeader.subchunk2Size, sizeof(uint32_t), 1, filename);
+
+    fileHeader.data = new int16_t[fileHeader.subchunk2Size / sizeof(int16_t)];
+    fread(fileHeader.data, sizeof(int16_t), (fileHeader.subchunk2Size / sizeof(int16_t)), filename);
 
     return fileHeader;
 }
