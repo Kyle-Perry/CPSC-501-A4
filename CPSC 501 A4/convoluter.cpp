@@ -38,14 +38,14 @@ int main(int argc, char *argv[])
 
      if (argc == 4)
      {
-         fopen_s(&sourceFile, argv[1], "r");
+         fopen_s(&sourceFile, argv[1], "rb");
          if (sourceFile == NULL)
          {
              std::cerr << "Error: Failed to open file \"" << argv[1] << "\"" << std::endl;
              exit(-1);
          }
 
-         fopen_s(&irFile, argv[2], "r");
+         fopen_s(&irFile, argv[2], "rb");
          if (irFile == NULL)
          {
              std::cerr << "Error: Failed to open file \"" << argv[2] << "\"" << std::endl;
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 
          sourceHeader.subchunk1Size = 16;
 
-         std::cout << std::endl << std::endl;
+         std::cout << std::endl;
 
          irHeader = readHeader(irFile);
          printHeader(irHeader);
@@ -91,12 +91,12 @@ wavHeader readHeader(FILE* filename)
     int16_t temp = 0;
 
     fread(fileHeader.chunkID, sizeof(char), 4, filename);
-    
+
     fread(&fileHeader.chunkSize, sizeof(uint32_t), 1, filename);
 
     fread(fileHeader.format, sizeof(char), 4, filename);
     fread(fileHeader.subchunk1ID, sizeof(char), 4, filename);
-   
+
     fread(&fileHeader.subchunk1Size, sizeof(uint32_t), 1, filename);
     fread(&fileHeader.audioFormat, sizeof(uint16_t), 1, filename);
     fread(&fileHeader.numChannels, sizeof(uint16_t), 1, filename);
@@ -104,7 +104,7 @@ wavHeader readHeader(FILE* filename)
     fread(&fileHeader.byteRate, sizeof(uint32_t), 1, filename);
     fread(&fileHeader.blockAlign, sizeof(uint16_t), 1, filename);
     fread(&fileHeader.bitsPerSample, sizeof(uint16_t), 1, filename);
-  
+
     if (fileHeader.subchunk1Size > 16) {
         for (int i = 0; i < (fileHeader.subchunk1Size - 16); i++)
             fread(&junk, sizeof(char), 1, filename);
@@ -115,9 +115,9 @@ wavHeader readHeader(FILE* filename)
 
     fileHeader.dataElements = fileHeader.subchunk2Size / sizeof(int16_t);
     fileHeader.data = new int16_t[fileHeader.dataElements];
-    for(int i = 0; i < fileHeader.dataElements; i++)
-        fread(fileHeader.data, sizeof(int16_t), 1, filename);
-
+    fread(fileHeader.data, sizeof(int16_t), fileHeader.dataElements, filename);
+        //std::cout << fileHeader.data[i] << std::flush;
+        
     return fileHeader;
 }
 
@@ -165,7 +165,6 @@ void writeFile(wavHeader fileHeader, FILE* outputFile) {
 
     fwriteIntLSB(fileHeader.subchunk2Size, outputFile);
 
-    std::cout << fileHeader.dataElements << std::endl;
     for (uint32_t i = 0; i < fileHeader.dataElements; i++)
     {
         fwriteShortLSB(fileHeader.data[i], outputFile);
