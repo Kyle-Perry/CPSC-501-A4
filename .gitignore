@@ -34,3 +34,35 @@ CPSC 501 A4/CPSC 501 A4.vcxproj
 CPSC 501 A4/CPSC 501 A4.vcxproj.filters
 CPSC 501 A4/CPSC 501 A4.vcxproj.user
 CPSC 501 A4.sln
+*.ipch
+*.opendb
+*.vsidx
+*.db-wal
+*.db-shm
+*.db
+.vs/CPSC 501 A4/v17/.suo
+CPSC 501 A4/x64/Debug/CodeAnalysisResultManifest.txt
+CPSC 501 A4/x64/Debug/CPSC 501 A4.Build.CppClean.log
+CPSC 501 A4/x64/Debug/CPSC 501 A4.exe.recipe
+CPSC 501 A4/x64/Debug/CPSC 501 A4.ilk
+CPSC 501 A4/x64/Debug/CPSC 501 A4.log
+CPSC 501 A4/x64/Debug/CPSC 501 A4.nativecodeanalysis.sarif
+CPSC 501 A4/x64/Debug/CPSC 501 A4.nativecodeanalysis.xml
+CPSC 501 A4/x64/Debug/CPSC 501 A4.tlog/CL.command.1.tlog
+CPSC 501 A4/x64/Debug/CPSC 501 A4.tlog/Cl.items.tlog
+CPSC 501 A4/x64/Debug/CPSC 501 A4.tlog/CL.read.1.tlog
+CPSC 501 A4/x64/Debug/CPSC 501 A4.tlog/CL.write.1.tlog
+CPSC 501 A4/x64/Debug/CPSC 501 A4.tlog/CPSC 501 A4.lastbuildstate
+CPSC 501 A4/x64/Debug/CPSC 501 A4.tlog/link.command.1.tlog
+CPSC 501 A4/x64/Debug/CPSC 501 A4.tlog/link.read.1.tlog
+CPSC 501 A4/x64/Debug/CPSC 501 A4.tlog/link.write.1.tlog
+CPSC 501 A4/x64/Debug/CPSC 501 A4.vcxproj.FileListAbsolute.txt
+CPSC 501 A4/x64/Debug/NativeCodeAnalysis.read.1.tlog
+CPSC 501 A4/x64/Debug/vc.nativecodeanalysis.all.xml
+CPSC 501 A4/x64/Debug/vc143.idb
+CPSC 501 A4/x64/Debug/vc143.pdb
+Dry Sounds.zip
+Impulse Responses - Mono.zip
+Impulse Responses - Stereo.zip
+x64/Debug/CPSC 501 A4.exe.lastcodeanalysissucceeded
+x64/Debug/CPSC 501 A4.pdb
