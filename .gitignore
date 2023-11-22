@@ -66,3 +66,7 @@ Impulse Responses - Mono.zip
 Impulse Responses - Stereo.zip
 x64/Debug/CPSC 501 A4.exe.lastcodeanalysissucceeded
 x64/Debug/CPSC 501 A4.pdb
+CPSC 501 A4/output.wav
+CPSC 501 A4/x64/Debug/convolve.exe.recipe
+CPSC 501 A4/x64/Debug/convolve.ilk
+x64/Debug/convolve.pdb

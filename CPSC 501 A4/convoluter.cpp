@@ -17,23 +17,26 @@ struct wavHeader {
     uint16_t bitsPerSample;
     char subchunk2ID[4];
     uint32_t subchunk2Size;
+    uint32_t dataElements;
     int16_t* data;
 };
 
 wavHeader readHeader(FILE* filename);
-uint16_t wap_endian16(uint16_t val);
-uint32_t swap_endian32(uint32_t val);
+size_t fwriteIntLSB(int data, FILE* stream);
+size_t fwriteShortLSB(short int data, FILE* stream);
 void printHeader(wavHeader fileHeader);
+void writeFile(wavHeader fileHeader, FILE* outputFile);
 
 int main(int argc, char *argv[])
 {
      FILE* sourceFile = NULL;
      FILE* irFile = NULL;
+     FILE* outputFile = NULL;
 
      wavHeader sourceHeader;
      wavHeader irHeader;
 
-     if (argc == 3)
+     if (argc == 4)
      {
          fopen_s(&sourceFile, argv[1], "r");
          if (sourceFile == NULL)
@@ -48,20 +51,32 @@ int main(int argc, char *argv[])
              std::cerr << "Error: Failed to open file \"" << argv[2] << "\"" << std::endl;
              exit(-1);
          }
-         std::cout << "Files " << argv[1] << " and " << argv[2] << " successfully opened!" << std::endl;
-    
+         fopen_s(&outputFile, argv[3], "wb");
+         if (outputFile == NULL)
+         {
+             std::cerr << "Error: Failed to create file \"" << argv[3] << "\"" << std::endl;
+             exit(-1);
+         }
+
          sourceHeader = readHeader(sourceFile);
          printHeader(sourceHeader);
+
+         sourceHeader.subchunk1Size = 16;
 
          std::cout << std::endl << std::endl;
 
          irHeader = readHeader(irFile);
          printHeader(irHeader);
 
+         writeFile(sourceHeader, outputFile);
+
+         fclose(sourceFile);
+         fclose(irFile);
+         fclose(outputFile);
      }
      else
      {
-         std::cerr << "Error: Incorrect number of arguments given. Proper usage is \"" << argv[0] << "\" sourceFilename impulseResponseFilename" << std::endl;
+         std::cerr << "Error: Incorrect number of arguments given. Proper usage is \"" << argv[0] << "\" sourceFilename impulseResponseFilename outputFilename" << std::endl;
          exit(-1);
      }
 
@@ -73,6 +88,7 @@ wavHeader readHeader(FILE* filename)
 {
     wavHeader fileHeader;
     char junk = '\0';
+    int16_t temp = 0;
 
     fread(fileHeader.chunkID, sizeof(char), 4, filename);
     
@@ -92,24 +108,17 @@ wavHeader readHeader(FILE* filename)
     if (fileHeader.subchunk1Size > 16) {
         for (int i = 0; i < (fileHeader.subchunk1Size - 16); i++)
             fread(&junk, sizeof(char), 1, filename);
-        fileHeader.subchunk1Size = 16;
     }
 
     fread(fileHeader.subchunk2ID, sizeof(char), 4, filename);
     fread(&fileHeader.subchunk2Size, sizeof(uint32_t), 1, filename);
 
-    fileHeader.data = new int16_t[fileHeader.subchunk2Size / sizeof(int16_t)];
-    fread(fileHeader.data, sizeof(int16_t), (fileHeader.subchunk2Size / sizeof(int16_t)), filename);
+    fileHeader.dataElements = fileHeader.subchunk2Size / sizeof(int16_t);
+    fileHeader.data = new int16_t[fileHeader.dataElements];
+    for(int i = 0; i < fileHeader.dataElements; i++)
+        fread(fileHeader.data, sizeof(int16_t), 1, filename);
 
     return fileHeader;
-}
-
-uint16_t swap_endian16(uint16_t val) {
-    return (val >> 8) | (val << 8);
-}
-
-uint32_t swap_endian32(uint32_t val) {
-    return (val << 24) | ((val << 8) & 0x00ff0000) | ((val >> 8) & 0x0000ff00) | (val >> 24);
 }
 
 void printHeader(wavHeader fileHeader) {
@@ -126,4 +135,59 @@ void printHeader(wavHeader fileHeader) {
     std::cout << "Bits Per Sample: " << fileHeader.bitsPerSample << std::endl;
     std::cout << "Subchunk 2 ID: " << fileHeader.subchunk2ID[0] << fileHeader.subchunk2ID[1] << fileHeader.subchunk2ID[2] << fileHeader.subchunk2ID[3] << std::endl;
     std::cout << "Subchunk 2 Size: " << fileHeader.subchunk2Size << std::endl;
+    std::cout << "Number of data elements: " << fileHeader.dataElements << std::endl;
+}
+
+void writeFile(wavHeader fileHeader, FILE* outputFile) {
+    fputs("RIFF", outputFile);
+
+    fwriteIntLSB(fileHeader.chunkSize, outputFile);
+
+    fputs("WAVE", outputFile);
+
+    fputs("fmt ", outputFile);
+
+    fwriteIntLSB(fileHeader.subchunk1Size, outputFile);
+
+    fwriteShortLSB(fileHeader.audioFormat, outputFile);
+
+    fwriteShortLSB(fileHeader.numChannels, outputFile);
+
+    fwriteIntLSB(fileHeader.sampleRate, outputFile);
+
+    fwriteIntLSB(fileHeader.byteRate, outputFile);
+
+    fwriteShortLSB(fileHeader.blockAlign, outputFile);
+
+    fwriteShortLSB(fileHeader.bitsPerSample, outputFile);
+
+    fputs("data", outputFile);
+
+    fwriteIntLSB(fileHeader.subchunk2Size, outputFile);
+
+    std::cout << fileHeader.dataElements << std::endl;
+    for (uint32_t i = 0; i < fileHeader.dataElements; i++)
+    {
+        fwriteShortLSB(fileHeader.data[i], outputFile);
+    }
+}
+
+size_t fwriteIntLSB(int data, FILE* stream)
+{
+    unsigned char array[4];
+
+    array[3] = (unsigned char)((data >> 24) & 0xFF);
+    array[2] = (unsigned char)((data >> 16) & 0xFF);
+    array[1] = (unsigned char)((data >> 8) & 0xFF);
+    array[0] = (unsigned char)(data & 0xFF);
+    return fwrite(array, sizeof(unsigned char), 4, stream);
+}
+
+size_t fwriteShortLSB(short int data, FILE* stream)
+{
+    unsigned char array[2];
+
+    array[1] = (unsigned char)((data >> 8) & 0xFF);
+    array[0] = (unsigned char)(data & 0xFF);
+    return fwrite(array, sizeof(unsigned char), 2, stream);
 }
