@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdint>
+#include <stdio.h>
 
 struct wavHeader {
     char chunkID[4];
