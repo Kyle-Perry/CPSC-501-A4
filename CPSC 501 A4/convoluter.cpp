@@ -22,10 +22,14 @@ struct wavHeader {
 };
 
 wavHeader readHeader(FILE* filename);
-size_t fwriteIntLSB(int data, FILE* stream);
+size_t fwriteIntLSB(int32_t data, FILE* stream);
 size_t fwriteShortLSB(short int data, FILE* stream);
 void printHeader(wavHeader fileHeader);
 void writeFile(wavHeader fileHeader, FILE* outputFile);
+float* scaleData(int16_t* data, uint32_t size);
+void convolve(float* x, uint32_t N, float* h, uint32_t M, float* y, uint32_t P);
+int16_t* descaleData(float* data, uint32_t size);
+wavHeader produceOutput(uint32_t size);
 
 int main(int argc, char *argv[])
 {
@@ -35,6 +39,13 @@ int main(int argc, char *argv[])
 
      wavHeader sourceHeader;
      wavHeader irHeader;
+     wavHeader outputHeader;
+
+     float* scaledSource = NULL;
+     float* scaledIR = NULL;
+     float* scaledOutput = NULL;
+
+     uint32_t outputSize = 0;
 
      if (argc == 4)
      {
@@ -68,7 +79,21 @@ int main(int argc, char *argv[])
          irHeader = readHeader(irFile);
          printHeader(irHeader);
 
-         writeFile(sourceHeader, outputFile);
+         outputSize = sourceHeader.dataElements + irHeader.dataElements - 1;
+         outputHeader = produceOutput(outputSize);
+
+         scaledOutput = new float[outputSize];
+
+         scaledSource = scaleData(sourceHeader.data, sourceHeader.dataElements);
+         scaledIR = scaleData(irHeader.data, irHeader.dataElements);
+         convolve(scaledSource, sourceHeader.dataElements, scaledIR, irHeader.dataElements, scaledOutput, outputSize);
+         
+         outputHeader.data = descaleData(scaledOutput, outputSize);
+        
+         std::cout << std::endl;
+         printHeader(outputHeader);
+
+         writeFile(outputHeader, outputFile);
 
          fclose(sourceFile);
          fclose(irFile);
@@ -116,7 +141,6 @@ wavHeader readHeader(FILE* filename)
     fileHeader.dataElements = fileHeader.subchunk2Size / sizeof(int16_t);
     fileHeader.data = new int16_t[fileHeader.dataElements];
     fread(fileHeader.data, sizeof(int16_t), fileHeader.dataElements, filename);
-        //std::cout << fileHeader.data[i] << std::flush;
         
     return fileHeader;
 }
@@ -171,7 +195,7 @@ void writeFile(wavHeader fileHeader, FILE* outputFile) {
     }
 }
 
-size_t fwriteIntLSB(int data, FILE* stream)
+size_t fwriteIntLSB(int32_t data, FILE* stream)
 {
     unsigned char array[4];
 
@@ -189,4 +213,83 @@ size_t fwriteShortLSB(short int data, FILE* stream)
     array[1] = (unsigned char)((data >> 8) & 0xFF);
     array[0] = (unsigned char)(data & 0xFF);
     return fwrite(array, sizeof(unsigned char), 2, stream);
+}
+
+float* scaleData(int16_t* data, uint32_t size) {
+    float* scaledInput = new float[size];
+
+    for (size_t i = 0; i < size; i++) {
+        if (data[i] < 0)
+            scaledInput[i] = data[i] / static_cast<float>(INT16_MIN);
+        else
+            scaledInput[i] = data[i] / static_cast<float>(INT16_MAX);
+    }
+    return scaledInput;
+}
+
+void convolve(float* x, uint32_t N, float* h, uint32_t M, float* y, uint32_t P) {
+    size_t n, m;
+    
+    for (n = 0; n < P; n++) {
+        y[n] = 0.0;
+    }
+
+    for (n = 0; n < N; n++) {
+        for (m = 0; m < M; m++) {
+            y[n + m] += x[n] * h[m];
+        }
+    }
+}
+
+int16_t* descaleData(float* data, uint32_t size) {
+    int16_t* descaled = new int16_t[size];
+    
+    for (int i = 0; i < size; i++) {
+        if (data[i] < 0.0)
+            descaled[i] = static_cast<int16_t>(data[i] * INT16_MIN);
+        else
+            descaled[i] = static_cast<int16_t>(data[i] * INT16_MAX);
+    }
+
+    return descaled;
+}
+
+wavHeader produceOutput(uint32_t size) {
+    wavHeader outputHeader;
+    outputHeader.chunkID[0] = 'R';
+    outputHeader.chunkID[1] = 'I';
+    outputHeader.chunkID[2] = 'F';
+    outputHeader.chunkID[3] = 'F';
+
+    outputHeader.format[0] = 'W';
+    outputHeader.format[1] = 'A';
+    outputHeader.format[2] = 'V';
+    outputHeader.format[3] = 'E';
+        
+    outputHeader.subchunk1ID[0] = 'f';
+    outputHeader.subchunk1ID[1] = 'm';
+    outputHeader.subchunk1ID[2] = 't';
+    outputHeader.subchunk1ID[3] = ' ';
+
+    outputHeader.subchunk2ID[0] = 'd';
+    outputHeader.subchunk2ID[1] = 'a';
+    outputHeader.subchunk2ID[2] = 't';
+    outputHeader.subchunk2ID[3] = 'a';
+
+    outputHeader.bitsPerSample = 16;
+    outputHeader.numChannels = 1;
+    outputHeader.sampleRate = 44100;
+    outputHeader.dataElements = size;
+
+    outputHeader.blockAlign = (outputHeader.numChannels * outputHeader.bitsPerSample) / 8;
+    outputHeader.byteRate = outputHeader.sampleRate * outputHeader.blockAlign;
+
+    outputHeader.subchunk2Size = outputHeader.dataElements* outputHeader.blockAlign;
+
+
+    outputHeader.chunkSize = 36 + outputHeader.subchunk2Size;
+    outputHeader.subchunk1Size = 16;
+    outputHeader.audioFormat = 1;
+
+    return outputHeader;
 }
