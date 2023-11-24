@@ -24,8 +24,9 @@ struct wavHeader {
 wavHeader readHeader(FILE* filename);
 size_t fwriteIntLSB(int32_t data, FILE* stream);
 size_t fwriteShortLSB(short int data, FILE* stream);
+size_t fwrite24BitLSB(int32_t data, FILE* stream);
 void printHeader(wavHeader fileHeader);
-void writeFile(wavHeader fileHeader, FILE* outputFile);
+void writeFile(wavHeader fileHeader, int16_t* data, FILE* outputFile);
 float* scaleData(int16_t* data, uint32_t size);
 void convolve(float* x, uint32_t N, float* h, uint32_t M, float* y, uint32_t P);
 int16_t* descaleData(float* data, uint32_t size);
@@ -44,6 +45,8 @@ int main(int argc, char *argv[])
      float* scaledSource = NULL;
      float* scaledIR = NULL;
      float* scaledOutput = NULL;
+
+     int16_t* outputData = NULL;
 
      uint32_t outputSize = 0;
 
@@ -87,13 +90,16 @@ int main(int argc, char *argv[])
          scaledSource = scaleData(sourceHeader.data, sourceHeader.dataElements);
          scaledIR = scaleData(irHeader.data, irHeader.dataElements);
          convolve(scaledSource, sourceHeader.dataElements, scaledIR, irHeader.dataElements, scaledOutput, outputSize);
-         
-         outputHeader.data = descaleData(scaledOutput, outputSize);
+        
+         free(scaledSource);
+         free(scaledIR);
+
+         outputData = descaleData(scaledOutput, outputSize);
         
          std::cout << std::endl;
          printHeader(outputHeader);
 
-         writeFile(outputHeader, outputFile);
+         writeFile(outputHeader, outputData, outputFile);
 
          fclose(sourceFile);
          fclose(irFile);
@@ -162,7 +168,7 @@ void printHeader(wavHeader fileHeader) {
     std::cout << "Number of data elements: " << fileHeader.dataElements << std::endl;
 }
 
-void writeFile(wavHeader fileHeader, FILE* outputFile) {
+void writeFile(wavHeader fileHeader, int16_t* data, FILE* outputFile) {
     fputs("RIFF", outputFile);
 
     fwriteIntLSB(fileHeader.chunkSize, outputFile);
@@ -191,7 +197,7 @@ void writeFile(wavHeader fileHeader, FILE* outputFile) {
 
     for (uint32_t i = 0; i < fileHeader.dataElements; i++)
     {
-        fwriteShortLSB(fileHeader.data[i], outputFile);
+        fwriteShortLSB(data[i], outputFile);
     }
 }
 
@@ -215,12 +221,22 @@ size_t fwriteShortLSB(short int data, FILE* stream)
     return fwrite(array, sizeof(unsigned char), 2, stream);
 }
 
+size_t fwrite24BitLSB(int32_t data, FILE* stream)
+{
+    unsigned char array[3];
+
+    array[2] = (unsigned char)((data >> 16) & 0xFF);
+    array[1] = (unsigned char)((data >> 8) & 0xFF);
+    array[0] = (unsigned char)(data & 0xFF);
+    return fwrite(array, sizeof(unsigned char), 3, stream);
+}
+
 float* scaleData(int16_t* data, uint32_t size) {
     float* scaledInput = new float[size];
 
     for (size_t i = 0; i < size; i++) {
         if (data[i] < 0)
-            scaledInput[i] = data[i] / static_cast<float>(INT16_MIN);
+            scaledInput[i] = data[i] / static_cast<float>(INT16_MAX + 1);
         else
             scaledInput[i] = data[i] / static_cast<float>(INT16_MAX);
     }
@@ -244,11 +260,22 @@ void convolve(float* x, uint32_t N, float* h, uint32_t M, float* y, uint32_t P) 
 int16_t* descaleData(float* data, uint32_t size) {
     int16_t* descaled = new int16_t[size];
     
-    for (int i = 0; i < size; i++) {
-        if (data[i] < 0.0)
-            descaled[i] = static_cast<int16_t>(data[i] * INT16_MIN);
-        else
-            descaled[i] = static_cast<int16_t>(data[i] * INT16_MAX);
+    for (size_t i = 0; i < size; i++) {
+        if (data[i] < 0.0) {
+            if (data[i] < -1.0)
+                descaled[i] = INT16_MIN;
+            else
+               descaled[i] = static_cast<int16_t>(data[i] * INT16_MAX + 1);
+
+        }
+        else {
+            if (data[i] > 1.0)
+                descaled[i] = INT16_MAX;
+         else
+                descaled[i] = static_cast<int16_t>(data[i] * INT16_MAX);
+        }
+        if (i % 22050 == 0)
+            std::cout << data[i] << " converted to " << descaled[i] << std::endl;
     }
 
     return descaled;
