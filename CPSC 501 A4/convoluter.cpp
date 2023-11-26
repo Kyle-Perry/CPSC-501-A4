@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
          scaledIR = scaleData(irHeader.data, irHeader.dataElements);
          convolve(scaledSource, sourceHeader.dataElements, scaledIR, irHeader.dataElements, scaledOutput, outputSize);
         
-         free(scaledSource);
-         free(scaledIR);
+         delete(scaledSource);
+         delete(scaledIR);
 
          outputData = descaleData(scaledOutput, outputSize);
         
@@ -262,17 +262,10 @@ int16_t* descaleData(float* data, uint32_t size) {
     
     for (size_t i = 0; i < size; i++) {
         if (data[i] < 0.0) {
-            if (data[i] < -1.0)
-                descaled[i] = INT16_MIN;
-            else
-               descaled[i] = static_cast<int16_t>(data[i] * INT16_MAX + 1);
-
+            descaled[i] = static_cast<int16_t>(data[i] * 0.5 * INT16_MAX + 1);
         }
         else {
-            if (data[i] > 1.0)
-                descaled[i] = INT16_MAX;
-         else
-                descaled[i] = static_cast<int16_t>(data[i] * INT16_MAX);
+            descaled[i] = static_cast<int16_t>(data[i] * 0.5 * INT16_MAX);
         }
         if (i % 22050 == 0)
             std::cout << data[i] << " converted to " << descaled[i] << std::endl;
