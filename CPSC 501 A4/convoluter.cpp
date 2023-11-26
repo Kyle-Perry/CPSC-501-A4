@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
          sourceHeader = readHeader(sourceFile);
          irHeader = readHeader(irFile);
 
-         std::cout << "Input File: \"" << argv[2] << "\" information:\n" << "================================" << std::endl;
+         std::cout << "Input File: \"" << argv[1] << "\" information:\n" << "================================" << std::endl;
          printHeader(sourceHeader);
          std::cout << "================================" << std::endl << std::endl;
 
