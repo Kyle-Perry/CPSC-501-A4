@@ -70,3 +70,7 @@ CPSC 501 A4/output.wav
 CPSC 501 A4/x64/Debug/convolve.exe.recipe
 CPSC 501 A4/x64/Debug/convolve.ilk
 x64/Debug/convolve.pdb
+CPSC 501 A4/x64/Debug/convoluter.nativecodeanalysis.xml
+CPSC 501 A4/x64/Debug/convoluter.nativecodeanalysis.sarif
+CPSC 501 A4/x64/Debug/convolve.Build.CppClean.log
+CPSC 501 A4/time-domain convolution report.diagsession

@@ -52,20 +52,20 @@ int main(int argc, char *argv[])
 
      if (argc == 4)
      {
-         fopen_s(&sourceFile, argv[1], "rb");
+         sourceFile = fopen(argv[1], "rb");
          if (sourceFile == NULL)
          {
              std::cerr << "Error: Failed to open file \"" << argv[1] << "\"" << std::endl;
              exit(-1);
          }
 
-         fopen_s(&irFile, argv[2], "rb");
+         irFile = fopen(argv[2], "rb");
          if (irFile == NULL)
          {
              std::cerr << "Error: Failed to open file \"" << argv[2] << "\"" << std::endl;
              exit(-1);
          }
-         fopen_s(&outputFile, argv[3], "wb");
+         outputFile = fopen(argv[3], "wb");
          if (outputFile == NULL)
          {
              std::cerr << "Error: Failed to create file \"" << argv[3] << "\"" << std::endl;
@@ -73,14 +73,16 @@ int main(int argc, char *argv[])
          }
 
          sourceHeader = readHeader(sourceFile);
-         printHeader(sourceHeader);
-
-         sourceHeader.subchunk1Size = 16;
-
-         std::cout << std::endl;
-
          irHeader = readHeader(irFile);
+
+         std::cout << "Input File: \"" << argv[2] << "\" information:\n" << "================================" << std::endl;
+         printHeader(sourceHeader);
+         std::cout << "================================" << std::endl << std::endl;
+
+         std::cout << "IR File: \"" << argv[2] << "\" information:\n" << "================================" << std::endl;
          printHeader(irHeader);
+         std::cout << "================================" << std::endl;
+
 
          outputSize = sourceHeader.dataElements + irHeader.dataElements - 1;
          outputHeader = produceOutput(outputSize);
@@ -95,10 +97,6 @@ int main(int argc, char *argv[])
          delete(scaledIR);
 
          outputData = descaleData(scaledOutput, outputSize);
-        
-         std::cout << std::endl;
-         printHeader(outputHeader);
-
          writeFile(outputHeader, outputData, outputFile);
 
          fclose(sourceFile);
@@ -262,10 +260,10 @@ int16_t* descaleData(float* data, uint32_t size) {
     
     for (size_t i = 0; i < size; i++) {
         if (data[i] < 0.0) {
-            descaled[i] = static_cast<int16_t>(data[i] * 0.5 * INT16_MAX + 1);
+            descaled[i] = static_cast<int16_t>(data[i] * 0.1 * INT16_MAX + 1);
         }
         else {
-            descaled[i] = static_cast<int16_t>(data[i] * 0.5 * INT16_MAX);
+            descaled[i] = static_cast<int16_t>(data[i] * 0.1 * INT16_MAX);
         }
         if (i % 22050 == 0)
             std::cout << data[i] << " converted to " << descaled[i] << std::endl;
