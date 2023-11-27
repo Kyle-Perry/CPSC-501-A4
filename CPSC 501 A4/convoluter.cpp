@@ -135,7 +135,7 @@ wavHeader readHeader(FILE* filename)
     fread(&fileHeader.bitsPerSample, sizeof(uint16_t), 1, filename);
 
     if (fileHeader.subchunk1Size > 16) {
-        for (int i = 0; i < (fileHeader.subchunk1Size - 16); i++)
+        for (uint32_t i = 0; i < (fileHeader.subchunk1Size - 16); i++)
             fread(&junk, sizeof(char), 1, filename);
     }
 
@@ -265,10 +265,7 @@ int16_t* descaleData(float* data, uint32_t size) {
         else {
             descaled[i] = static_cast<int16_t>(data[i] * 0.1 * INT16_MAX);
         }
-        if (i % 22050 == 0)
-            std::cout << data[i] << " converted to " << descaled[i] << std::endl;
     }
-
     return descaled;
 }
 
@@ -303,7 +300,6 @@ wavHeader produceOutput(uint32_t size) {
     outputHeader.byteRate = outputHeader.sampleRate * outputHeader.blockAlign;
 
     outputHeader.subchunk2Size = outputHeader.dataElements* outputHeader.blockAlign;
-
 
     outputHeader.chunkSize = 36 + outputHeader.subchunk2Size;
     outputHeader.subchunk1Size = 16;
