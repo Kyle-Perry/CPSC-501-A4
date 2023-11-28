@@ -37,7 +37,6 @@ void convolve(double* x, uint32_t N, double* h, uint32_t M, double* y, uint32_t 
 int16_t* descaleData(double* data, uint32_t size);
 wavHeader produceOutput(uint32_t size);
 void four1(double data[], int nn, int isign);
-void postProcessComplex(double x[], int N);
 double* freqConvolve(double x[], double h[], uint32_t N);
 double* zeroPadArray(uint32_t newSize, double* data, uint32_t size);
 
@@ -376,43 +375,6 @@ void four1(double data[], int nn, int isign) {
 	}
 
 
-}
-
-void postProcessComplex(double x[], int N)
-{
-	int i, k, j;
-	double* amplitude, * result;
-
-	// Allocate temporary arrays
-	amplitude = (double*)calloc(N, sizeof(double));
-	result = (double*)calloc(N, sizeof(double));
-
-	// Calculate amplitude
-	for (k = 0, i = 0; k < N; k++, i += 2) {
-		// Scale results by N
-		double real = x[i] / (double)N;
-		double imag = x[i + 1] / (double)N;
-		// Calculate amplitude
-		amplitude[k] = sqrt(real * real + imag * imag);
-	}
-
-	// Combine amplitudes of positive and negative frequencies
-	result[0] = amplitude[0];
-	result[N / 2] = amplitude[N / 2];
-	for (k = 1, j = N - 1; k < N / 2; k++, j--)
-		result[k] = amplitude[k] + amplitude[j];
-
-
-	// Print out final result
-	printf("Harmonic \tAmplitude\n");
-	printf("DC \t\t%.6f\n", result[0]);
-	for (k = 1; k <= N / 2; k++)
-		printf("%-d \t\t%.6f\n", k, result[k]);
-	printf("\n");
-
-	// Free up memory used for arrays
-	free(amplitude);
-	free(result);
 }
 
 double* zeroPadArray(uint32_t newSize, double* data, uint32_t size) {
