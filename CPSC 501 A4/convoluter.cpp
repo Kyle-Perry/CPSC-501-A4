@@ -123,6 +123,7 @@ int main(int argc, char *argv[])
 		 outputData = descaleData(scaledOutput, newSize);
 		 writeFile(outputHeader, outputData, outputFile);
 
+		 delete(scaledOutput);
 		 fclose(sourceFile);
 		 fclose(irFile);
 		 fclose(outputFile);
@@ -328,20 +329,20 @@ void four1(double data[], int nn, int isign) {
 	uint32_t n, mmax, m, j, istep, i;
 	double wtemp, wr, wpr, wpi, wi, theta;
 	double tempr, tempi;
-	double *swapj, *swapi;
+	double *tempJR, *tempIR, *tempJI, *tempII;
 
 	n = nn << 1;
 	j = 1;
 
 	for (i = 1; i < n; i += 2) {
 		if (j > i) {
-			swapj = &data[j];
-			swapi = &data[i];
-			SWAP(*swapj, *swapi);
+			tempJR = &data[j];
+			tempIR = &data[i];
+			SWAP(*tempJR, *tempIR);
 
-			swapj = &data[j+1];
-			swapi = &data[i+1];
-			SWAP(*swapj, *swapi);
+			tempJR = &data[j+1];
+			tempIR = &data[i+1];
+			SWAP(*tempJR, *tempIR);
 		}
 
 		m = nn;
@@ -366,12 +367,18 @@ void four1(double data[], int nn, int isign) {
 		for (m = 1; m < mmax; m += 2) {
 			for (i = m; i <= n; i += istep) {
 				j = i + mmax;
-				tempr = wr * data[j] - wi * data[j + 1];
-				tempi = wr * data[j + 1] + wi * data[j];
-				data[j] = data[i] - tempr;
-				data[j + 1] = data[i + 1] - tempi;
-				data[i] += tempr;
-				data[i + 1] += tempi;
+
+				tempJR = &data[j];
+				tempIR = &data[i];
+				tempJI = &data[j + 1];
+				tempII = &data[i + 1];
+
+				tempr = wr * (*tempJR) - wi * (*tempJI);
+				tempi = wr * (*tempJI) + wi * (*tempJR);
+				(*tempJR) = (*tempIR) - tempr;
+				(*tempJI) = (*tempII) - tempi;
+				(*tempIR) += tempr;
+				(*tempII) += tempi;
 			}
 			wr = (wtemp = wr) * wpr - wi * wpi + wr;
 			wi = wi * wpr + wtemp * wpi + wi;
