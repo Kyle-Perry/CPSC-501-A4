@@ -4,8 +4,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define PI          3.141592653589793
-#define TWO_PI      (pi * 2.0)
+#define TWO_PI      6.28318530717959
 #define SWAP(a,b)   tempr = (a);(a) = (b);(b) = tempr
 
 struct wavHeader {
@@ -329,14 +328,20 @@ void four1(double data[], int nn, int isign) {
 	uint32_t n, mmax, m, j, istep, i;
 	double wtemp, wr, wpr, wpi, wi, theta;
 	double tempr, tempi;
+	double *swapj, *swapi;
 
 	n = nn << 1;
 	j = 1;
 
 	for (i = 1; i < n; i += 2) {
 		if (j > i) {
-			SWAP(data[j], data[i]);
-			SWAP(data[j+1], data[i+1]);
+			swapj = &data[j];
+			swapi = &data[i];
+			SWAP(*swapj, *swapi);
+
+			swapj = &data[j+1];
+			swapi = &data[i+1];
+			SWAP(*swapj, *swapi);
 		}
 
 		m = nn;
@@ -352,7 +357,7 @@ void four1(double data[], int nn, int isign) {
 	mmax = 2;
 	while (n > mmax) {
 		istep = mmax << 1;
-		theta = isign * (6.28318530717959 / mmax);
+		theta = isign * (TWO_PI / mmax);
 		wtemp = sin(0.5 * theta);
 		wpr = -2.0 * wtemp * wtemp;
 		wpi = sin(theta);
