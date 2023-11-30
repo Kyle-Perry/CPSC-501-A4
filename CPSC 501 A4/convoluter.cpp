@@ -324,10 +324,18 @@ wavHeader produceOutput(uint32_t size) {
 
 	return outputHeader;
 }
-
+//  The four1 FFT from Numerical Recipes in C,
+//  p. 507 - 508.
+//  Note:  changed float data types to double.
+//  nn must be a power of 2, and use +1 for
+//  isign for an FFT, and -1 for the Inverse FFT.
+//  The data is complex, so the array size must be
+//  nn*2. This code assumes the array starts
+//  at index 1, not 0, so subtract 1 when
+//  calling the routine (see main() below).
 void four1(double data[], int nn, int isign) {
 	uint32_t n, mmax, m, j, istep, i;
-	double wtemp, wr, wpr, wpi, wi, theta;
+	double wtemp, wtemp2, wr, wpr, wpi, wi, theta;
 	double tempr, tempi;
 	double *tempJR, *tempIR, *tempJI, *tempII;
 
@@ -360,7 +368,8 @@ void four1(double data[], int nn, int isign) {
 		istep = mmax << 1;
 		theta = isign * (TWO_PI / mmax);
 		wtemp = sin(0.5 * theta);
-		wpr = -2.0 * wtemp * wtemp;
+		wtemp2 = wtemp * wtemp;
+		wpr = -(wtemp2 + wtemp2);
 		wpi = sin(theta);
 		wr = 1.0;
 		wi = 0.0;
