@@ -263,20 +263,6 @@ double* scaleData(int16_t* data, uint32_t size) {
 	return scaledInput;
 }
 
-void convolve(double* x, uint32_t N, double* h, uint32_t M, double* y, uint32_t P) {
-	size_t n, m;
-	
-	for (n = 0; n < P; n++) {
-		y[n] = 0.0;
-	}
-
-	for (n = 0; n < N; n++) {
-		for (m = 0; m < M; m++) {
-			y[n + m] += x[n] * h[m];
-		}
-	}
-}
-
 int16_t* descaleData(double* data, uint32_t size) {
 	int16_t* descaled = new int16_t[size];
 	
@@ -417,6 +403,8 @@ double* freqConvolve(double x[], double h[], uint32_t N) {
 	uint32_t i, k, two_N = N << 1;
 	double tempXR = 0.0, tempXI = 0.0, tempHR = 0.0, tempHI = 0.0;
 	double* y = new double[two_N];
+	double s1, s2, s3;
+
 
 	for (k = 0, i = 0; k < N; k++, i += 2) {
 		// Scale results by N
@@ -425,8 +413,12 @@ double* freqConvolve(double x[], double h[], uint32_t N) {
 		tempHR = h[i] / (double)N;
 		tempHI = h[i + 1] / (double)N;
 		
-		y[i] = (tempXR * tempHR) - (tempXI * tempHI);
-		y[i + 1] = (tempXI * tempHR) + (tempHI * tempXR);
+		s1 = tempXR * tempHR;
+		s2 = tempXI * tempHI;
+		s3 = (tempXR + tempXI) * (tempHR + tempHI);
+
+		y[i] = s1 - s2;
+		y[i + 1] = (s3 - s1) - s2;
 	}
 
 	return y;
