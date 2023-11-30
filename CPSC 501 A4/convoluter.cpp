@@ -403,7 +403,7 @@ double* freqConvolve(double x[], double h[], uint32_t N) {
 	uint32_t i, k, two_N = N << 1;
 	double tempXR = 0.0, tempXI = 0.0, tempHR = 0.0, tempHI = 0.0;
 	double* y = new double[two_N];
-	double s1, s2, s3;
+	register double s1, s2, s3;
 
 
 	for (k = 0, i = 0; k < N; k++, i += 2) {
