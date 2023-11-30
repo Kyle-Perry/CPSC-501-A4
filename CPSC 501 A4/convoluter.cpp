@@ -334,8 +334,8 @@ void four1(double data[], int nn, int isign) {
 			tempIR = &data[i];
 			SWAP(*tempJR, *tempIR);
 
-			tempJR = &data[j+1];
-			tempIR = &data[i+1];
+			tempJR = tempJR + 1;
+			tempIR = tempIR + 1;
 			SWAP(*tempJR, *tempIR);
 		}
 
@@ -365,8 +365,8 @@ void four1(double data[], int nn, int isign) {
 
 				tempJR = &data[j];
 				tempIR = &data[i];
-				tempJI = &data[j + 1];
-				tempII = &data[i + 1];
+				tempJI = tempJR + 1;
+				tempII = tempIR + 1;
 
 				tempr = wr * (*tempJR) - wi * (*tempJI);
 				tempi = wr * (*tempJI) + wi * (*tempJR);
