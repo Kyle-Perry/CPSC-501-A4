@@ -403,22 +403,28 @@ double* freqConvolve(double x[], double h[], uint32_t N) {
 	uint32_t i, k, two_N = N << 1;
 	double tempXR = 0.0, tempXI = 0.0, tempHR = 0.0, tempHI = 0.0;
 	double* y = new double[two_N];
+	double* tempX, *tempH, *tempY;
 	double s1, s2, s3;
 
+	
 
 	for (k = 0, i = 0; k < N; k++, i += 2) {
 		// Scale results by N
-		tempXR = x[i] / (double)N;
-		tempXI = x[i + 1] / (double)N;
-		tempHR = h[i] / (double)N;
-		tempHI = h[i + 1] / (double)N;
+		tempX = &x[i];
+		tempH = &h[i];
+		tempY = &y[i];
+		
+		tempXR = *tempX / (double)N;
+		tempXI = *(tempX + 1) / (double)N;
+		tempHR = *tempH / (double)N;
+		tempHI = *(tempH + 1) / (double)N;
 		
 		s1 = tempXR * tempHR;
 		s2 = tempXI * tempHI;
 		s3 = (tempXR + tempXI) * (tempHR + tempHI);
 
-		y[i] = s1 - s2;
-		y[i + 1] = (s3 - s1) - s2;
+		*tempY = s1 - s2;
+		*(tempY + 1) = (s3 - s1) - s2;
 	}
 
 	return y;
