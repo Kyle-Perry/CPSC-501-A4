@@ -375,6 +375,7 @@ void four1(double data[], int nn, int isign) {
 				(*tempIR) += tempr;
 				(*tempII) += tempi;
 			}
+
 			wr = (wtemp = wr) * wpr - wi * wpi + wr;
 			wi = wi * wpr + wtemp * wpi + wi;
 		}
@@ -391,7 +392,7 @@ double* zeroPadArray(uint32_t newSize, double* data, uint32_t size) {
 
 	paddedArr = new double[arrSize] {0.0};
 	
-	for (size_t i = 0; i < size; i+=2) {
+	for (size_t i = 0; i < size - 1; i+=2) {
 		paddedArr[(i << 1)] = data[i];
 
 		paddedArr[(i + 1) << 1] = data[(i + 1)];
