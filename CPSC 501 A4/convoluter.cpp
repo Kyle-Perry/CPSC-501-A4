@@ -37,7 +37,7 @@ int16_t* descaleData(double* data, uint32_t size);
 wavHeader produceOutput(uint32_t size);
 void four1(double data[], int nn, int isign);
 double* freqConvolve(double x[], double h[], uint32_t N);
-double* zeroPadArray(uint32_t newSize, double* data, uint32_t size);
+double* zeroPadArray(uint32_t newSize, int16_t* data, uint32_t size);
 
 
 int main(int argc, char *argv[])
@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
 	 uint32_t outputSize = 0;
 	 uint32_t largestSize = 0;
 	 uint32_t newSize = 1;
+	 size_t i = 0;
 
 	 if (argc == 4)
 	 {
@@ -96,9 +97,6 @@ int main(int argc, char *argv[])
 		 
 		 outputSize = sourceHeader.dataElements + irHeader.dataElements - 1;
 		 outputHeader = produceOutput(outputSize);
-
-		 scaledSource = scaleData(sourceHeader.data, sourceHeader.dataElements);
-		 scaledIR = scaleData(irHeader.data, irHeader.dataElements);
 		 
 		 if (sourceHeader.dataElements > irHeader.dataElements)
 			 largestSize = sourceHeader.dataElements;
@@ -108,12 +106,28 @@ int main(int argc, char *argv[])
 		 while (newSize < largestSize) {
 			 newSize <<= 1;
 		 }
-		 
-		 paddedSource = zeroPadArray(newSize, scaledSource, sourceHeader.dataElements);
-		 paddedIR = zeroPadArray(newSize, scaledIR, irHeader.dataElements);
 
-		 delete(scaledSource);
-		 delete(scaledIR);
+		 paddedSource = new double[newSize << 1] {0.0};
+
+		 for (size_t i = 0; (i < sourceHeader.dataElements - 1); i += 2) {
+			 paddedSource[(i << 1)] = static_cast<double>(sourceHeader.data[(i)]);
+
+			 paddedSource[(i + 1) << 1] = static_cast<double>(sourceHeader.data[(i + 1)]);
+		 }
+		 if (i == (sourceHeader.dataElements - 1)) {
+			 paddedSource[(sourceHeader.dataElements - 1) << 1] = sourceHeader.data[(sourceHeader.dataElements - 1)];
+		 }
+		 
+		 paddedIR = new double[newSize << 1] {0.0};
+
+		 for (size_t i = 0; (i < irHeader.dataElements - 1); i += 2) {
+			 paddedIR[(i << 1)] = static_cast<double>(irHeader.data[(i)]);
+
+			 paddedIR[(i + 1) << 1] = static_cast<double>(irHeader.data[(i + 1)]);
+		 }
+		 if (i == (irHeader.dataElements - 1)) {
+			 paddedIR[(irHeader.dataElements - 1) << 1] = irHeader.data[(irHeader.dataElements - 1)];
+		 }
 
 		 four1(paddedSource- 1, newSize, 1);
 		 four1(paddedIR - 1, newSize, 1);
@@ -254,15 +268,6 @@ size_t fwrite24BitLSB(int32_t data, FILE* stream)
 	return fwrite(array, sizeof(unsigned char), 3, stream);
 }
 
-double* scaleData(int16_t* data, uint32_t size) {
-	double* scaledInput = new double[size];
-
-	for (size_t i = 0; i < size; i++) {
-		scaledInput[i] = static_cast<double>(data[i]);
-	}
-	return scaledInput;
-}
-
 int16_t* descaleData(double* data, uint32_t size) {
 	int16_t* descaled = new int16_t[size];
 	
@@ -385,7 +390,7 @@ void four1(double data[], int nn, int isign) {
 
 }
 
-double* zeroPadArray(uint32_t newSize, double* data, uint32_t size) {
+double* zeroPadArray(uint32_t newSize, int16_t* data, uint32_t size) {
 	double* paddedArr;
 	uint32_t arrSize = newSize << 1;
 	size_t i = 0;
@@ -395,7 +400,7 @@ double* zeroPadArray(uint32_t newSize, double* data, uint32_t size) {
 	for (size_t i = 0; i < size - 1; i+=2) {
 		paddedArr[(i << 1)] = data[i];
 
-		paddedArr[(i + 1) << 1] = data[(i + 1)];
+		paddedArr[(i + 1) << 1] = static_cast<double>(data[(i + 1)]);
 	}
 	if (i == (size - 1)) {
 		paddedArr[(size - 1) << 1] = data[(size - 1)];
