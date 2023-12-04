@@ -393,10 +393,8 @@ double* zeroPadArray(uint32_t newSize, double* data, uint32_t size) {
 	
 	for (size_t i = 0; i < size; i+=2) {
 		paddedArr[(i << 1)] = data[i];
-		paddedArr[(i << 1) + 1] = 0.0;
 
 		paddedArr[(i + 1) << 1] = data[(i + 1)];
-		paddedArr[((i + 1) << 1) + 1] = 0.0;
 	}
 	if (i == (size - 1)) {
 		paddedArr[(size - 1) << 1] = data[(size - 1)];
