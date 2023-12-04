@@ -31,13 +31,11 @@ size_t fwriteShortLSB(short int data, FILE* stream);
 size_t fwrite24BitLSB(int32_t data, FILE* stream);
 void printHeader(wavHeader fileHeader);
 void writeFile(wavHeader fileHeader, int16_t* data, FILE* outputFile);
-double* scaleData(int16_t* data, uint32_t size);
 void convolve(double* x, uint32_t N, double* h, uint32_t M, double* y, uint32_t P);
 int16_t* descaleData(double* data, uint32_t size);
 wavHeader produceOutput(uint32_t size);
 void four1(double data[], int nn, int isign);
 double* freqConvolve(double x[], double h[], uint32_t N);
-double* zeroPadArray(uint32_t newSize, int16_t* data, uint32_t size);
 
 
 int main(int argc, char *argv[])
@@ -108,23 +106,25 @@ int main(int argc, char *argv[])
 		 }
 
 		 paddedSource = new double[newSize << 1] {0.0};
+		 paddedIR = new double[newSize << 1] {0.0};
 
-		 for (size_t i = 0; (i < sourceHeader.dataElements - 1); i += 2) {
-			 paddedSource[(i << 1)] = static_cast<double>(sourceHeader.data[(i)]);
 
-			 paddedSource[(i + 1) << 1] = static_cast<double>(sourceHeader.data[(i + 1)]);
+		 for (size_t i = 0; (i < largestSize - 1); i += 2) {
+			 if(i < sourceHeader.dataElements)
+				 paddedSource[(i << 1)] = static_cast<double>(sourceHeader.data[(i)]);
+			 if((i + 1) < sourceHeader.dataElements)
+				 paddedSource[(i + 1) << 1] = static_cast<double>(sourceHeader.data[(i + 1)]);
+
+			 if (i < irHeader.dataElements)
+				 paddedIR[(i << 1)] = static_cast<double>(irHeader.data[(i)]);
+			if((i + 1) < irHeader.dataElements)
+				 paddedIR[(i + 1) << 1] = static_cast<double>(irHeader.data[(i + 1)]);
+			
 		 }
 		 if (i == (sourceHeader.dataElements - 1)) {
 			 paddedSource[(sourceHeader.dataElements - 1) << 1] = sourceHeader.data[(sourceHeader.dataElements - 1)];
 		 }
 		 
-		 paddedIR = new double[newSize << 1] {0.0};
-
-		 for (size_t i = 0; (i < irHeader.dataElements - 1); i += 2) {
-			 paddedIR[(i << 1)] = static_cast<double>(irHeader.data[(i)]);
-
-			 paddedIR[(i + 1) << 1] = static_cast<double>(irHeader.data[(i + 1)]);
-		 }
 		 if (i == (irHeader.dataElements - 1)) {
 			 paddedIR[(irHeader.dataElements - 1) << 1] = irHeader.data[(irHeader.dataElements - 1)];
 		 }
@@ -388,26 +388,6 @@ void four1(double data[], int nn, int isign) {
 	}
 
 
-}
-
-double* zeroPadArray(uint32_t newSize, int16_t* data, uint32_t size) {
-	double* paddedArr;
-	uint32_t arrSize = newSize << 1;
-	size_t i = 0;
-
-	paddedArr = new double[arrSize] {0.0};
-	
-	for (size_t i = 0; i < size - 1; i+=2) {
-		paddedArr[(i << 1)] = data[i];
-
-		paddedArr[(i + 1) << 1] = static_cast<double>(data[(i + 1)]);
-	}
-	if (i == (size - 1)) {
-		paddedArr[(size - 1) << 1] = data[(size - 1)];
-	}
-
-	return paddedArr;
-  
 }
 
 double* freqConvolve(double x[], double h[], uint32_t N) {
