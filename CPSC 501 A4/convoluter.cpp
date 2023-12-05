@@ -111,14 +111,15 @@ int main(int argc, char *argv[])
 
 		 for (size_t i = 0; (i < largestSize - 1); i += 2) {
 			 if(i < sourceHeader.dataElements)
-				 paddedSource[(i << 1)] = static_cast<double>(sourceHeader.data[(i)]);
+				 paddedSource[(i << 1)] = sourceHeader.data[(i)];
 			 if((i + 1) < sourceHeader.dataElements)
-				 paddedSource[(i + 1) << 1] = static_cast<double>(sourceHeader.data[(i + 1)]);
+				 paddedSource[(i + 1) << 1] = sourceHeader.data[(i + 1)];
 
 			 if (i < irHeader.dataElements)
-				 paddedIR[(i << 1)] = static_cast<double>(irHeader.data[(i)]);
+				 paddedIR[(i << 1)] = irHeader.data[(i)];
+
 			if((i + 1) < irHeader.dataElements)
-				 paddedIR[(i + 1) << 1] = static_cast<double>(irHeader.data[(i + 1)]);
+				 paddedIR[(i + 1) << 1] = irHeader.data[(i + 1)];
 			
 		 }
 		 if (i == (sourceHeader.dataElements - 1)) {
@@ -392,7 +393,7 @@ void four1(double data[], int nn, int isign) {
 
 double* freqConvolve(double x[], double h[], uint32_t N) {
 	uint32_t i, k, two_N = N << 1;
-	double tempXR = 0.0, tempXI = 0.0, tempHR = 0.0, tempHI = 0.0;
+	double tempXR = 0.0, tempXI = 0.0, tempHR = 0.0, tempHI = 0.0, dN = static_cast<double>(N);
 	double* y = new double[two_N];
 	double* tempX, *tempH, *tempY;
 	double s1, s2, s3;
@@ -405,10 +406,10 @@ double* freqConvolve(double x[], double h[], uint32_t N) {
 		tempH = &h[i];
 		tempY = &y[i];
 		
-		tempXR = *tempX / (double)N;
-		tempXI = *(tempX + 1) / (double)N;
-		tempHR = *tempH / (double)N;
-		tempHI = *(tempH + 1) / (double)N;
+		tempXR = *tempX / dN;
+		tempXI = *(tempX + 1) / dN;
+		tempHR = *tempH / dN;
+		tempHI = *(tempH + 1) / dN;
 		
 		s1 = tempXR * tempHR;
 		s2 = tempXI * tempHI;
